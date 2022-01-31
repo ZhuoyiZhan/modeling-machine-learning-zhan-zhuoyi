@@ -1,7 +1,7 @@
 Homework 1
 ================
 Zhan, Zhuoyi
-Fri Jan 28 13:23:53 2022
+Mon Jan 31 17:06:47 2022
 
 ``` r
 library('class')
@@ -126,8 +126,29 @@ summary(beta_lm)
 ``` r
 newx <-data.frame(dat$xnew)
 newx <- rename(newx, X1= x1, X2=x2)
-pred <- predict.lm(beta_lm, newx)
+lm_pred <- predict.lm(beta_lm, newx)
+## reshape predictions as a matrix
+lm_pred <- matrix(lm_pred, length(dat$px1), length(dat$px2))
+contour(lm_pred,
+      xlab=expression(x[1]),
+      ylab=expression(x[2]))
 ```
+
+![](HW1-ZhanZ_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+``` r
+## find the contours in 2D space such that lc_pred == 0.5
+lc_cont <- contourLines(dat$px1, dat$px2, lm_pred, levels=0.5)
+
+## plot data and decision surface
+eval(plot_mix_data)
+sapply(lc_cont, lines)
+```
+
+![](HW1-ZhanZ_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
+
+    ## [[1]]
+    ## NULL
 
 # Question 2
 
@@ -162,14 +183,42 @@ summary(sq_beta_lm)
     ## Multiple R-squared:  0.2921, Adjusted R-squared:  0.2775 
     ## F-statistic: 20.11 on 4 and 195 DF,  p-value: 6.985e-14
 
+``` r
+sq_pred <- matrix(sq_pred, length(dat$px1), length(dat$px2))
+contour(sq_pred,
+      xlab=expression(x[1]),
+      ylab=expression(x[2]))
+```
+
+![](HW1-ZhanZ_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+``` r
+## find the contours in 2D space such that lc_pred == 0.5
+lc_cont <- contourLines(dat$px1, dat$px2, sq_pred, levels=0.5)
+
+## plot data and decision surface
+eval(plot_mix_data)
+sapply(lc_cont, lines)
+```
+
+![](HW1-ZhanZ_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
+
+    ## [[1]]
+    ## NULL
+
 # Question 3
 
-Error is the combination of bias and variance. As the model gets more
-flexible, we are reducing testing error which means the model is fitted
-better, But when the level of complexity gets higher and higher, the
-model will overfit and the test error goes higher again. So the
-bias-variance tradeoff means that we need to reach the optimal level of
-flexibility, to minimize the test error.
+Error is the combination of bias and variance. Because we never know the
+underlying function, we use fitted function to estimate it. The distance
+between the true model and the fitted model is the bias. Variance means
+that the fitted models change from one sample to another a lot. By
+adding squared terms into the linear regression function, the model gets
+more flexible because it becomes curvy and getting closer to the true
+decision boundary between two categories. We are reducing testing error
+which means the model is fitted better, But when the level of complexity
+gets higher and higher, the model will overfit and the test error goes
+higher again. So the bias-variance tradeoff means that we need to reach
+the optimal level of flexibility, to minimize the test error.
 
 ``` r
 ## fit knn classifier
