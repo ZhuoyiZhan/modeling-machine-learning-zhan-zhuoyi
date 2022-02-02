@@ -1,7 +1,7 @@
 Homework 2
 ================
 Zhan, Zhuoyi
-Wed Feb 2 16:07:37 2022
+Wed Feb 2 16:24:15 2022
 
 ``` r
 ## load prostate data
@@ -280,7 +280,7 @@ lin_pred1 <- predict_lin1(x=x_grid, beta=lin_beta1$par)
 tau = 0.25
 fit_lin2 <- function(y, x, loss=ab_loss, beta_init = c(-1.0, 0.0, -0.3)){
   err <- function(beta)
-    tau *max(loss(y,  beta[1] + beta[2]*exp(-beta[3]*x)))
+    tau * max(loss(y,  beta[1] + beta[2]*exp(-beta[3]*x)))
   beta <- optim(par = beta_init, fn = err)
   return(beta)
 }
@@ -297,10 +297,9 @@ lin_beta2 <- fit_lin2(y=prostate_train$lcavol,
 lin_pred2 <- predict_lin2(x=x_grid, beta=lin_beta2$par)
 
 # fit simple linear model using numerical optimization
-tau=0.75
 fit_lin3 <- function(y, x, loss=ab_loss75, beta_init = c(-1.0, 0.0, -0.3)){
   err <- function(beta)
-    tau*max(loss(y,  beta[1] + beta[2]*exp(-beta[3]*x)))
+    max(loss(y,  beta[1] + beta[2]*exp(-beta[3]*x)))
   beta <- optim(par = beta_init, fn = err)
   return(beta)
 }
