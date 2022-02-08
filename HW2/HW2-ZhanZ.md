@@ -1,7 +1,7 @@
 Homework 2
 ================
 Zhan, Zhuoyi
-Wed Feb 2 16:24:15 2022
+Tue Feb 8 16:11:34 2022
 
 ``` r
 ## load prostate data
@@ -140,7 +140,7 @@ ab_loss75 <- function(y, yhat,tau){
 ## fit simple linear model using numerical optimization
 fit_lin1 <- function(y, x, loss=L1_loss, beta_init = c(-0.51, 0.75)) {
   err <- function(beta)
-    median(loss(y,  beta[1] + beta[2]*x))
+    mean(loss(y,  beta[1] + beta[2]*x))
   beta <- optim(par = beta_init, fn = err)
   return(beta)
 }
@@ -168,7 +168,7 @@ lin_pred1 <- predict_lin1(x=x_grid, beta=lin_beta1$par)
 tau =0.25
 fit_lin2 <- function(y, x, loss=ab_loss, beta_init = c(-0.51, 0.75)) {
   err <- function(beta)
-    tau*max(loss(y,  beta[1] + beta[2]*x))
+    mean(loss(y,  beta[1] + beta[2]*x))
   beta <- optim(par = beta_init, fn = err)
   return(beta)
 }
@@ -188,7 +188,7 @@ lin_pred2 <- predict_lin2(x=x_grid, beta=lin_beta2$par)
 tau = 0.75
 fit_lin3 <- function(y, x, loss=ab_loss75, beta_init = c(-0.51, 0.75)) {
   err <- function(beta)
-    tau *max(loss(y,  beta[1] + beta[2]*x))
+    mean(loss(y,  beta[1] + beta[2]*x))
   beta <- optim(par = beta_init, fn = err)
   return(beta)
 }
@@ -252,7 +252,7 @@ lin_pred <- predict_lin(x=x_grid, beta=lin_beta$par)
 ## fit simple linear model using numerical optimization
 fit_lin1 <- function(y, x, loss=L1_loss, beta_init = c(-1.0, 0.0, -0.3)) {
   err <- function(beta)
-    median(loss(y,  beta[1] + beta[2]*exp(-beta[3]*x)))
+    mean(loss(y,  beta[1] + beta[2]*exp(-beta[3]*x)))
   beta <- optim(par = beta_init, fn = err)
   return(beta)
 }
@@ -280,7 +280,7 @@ lin_pred1 <- predict_lin1(x=x_grid, beta=lin_beta1$par)
 tau = 0.25
 fit_lin2 <- function(y, x, loss=ab_loss, beta_init = c(-1.0, 0.0, -0.3)){
   err <- function(beta)
-    tau * max(loss(y,  beta[1] + beta[2]*exp(-beta[3]*x)))
+    mean(loss(y,  beta[1] + beta[2]*exp(-beta[3]*x)))
   beta <- optim(par = beta_init, fn = err)
   return(beta)
 }
@@ -299,7 +299,7 @@ lin_pred2 <- predict_lin2(x=x_grid, beta=lin_beta2$par)
 # fit simple linear model using numerical optimization
 fit_lin3 <- function(y, x, loss=ab_loss75, beta_init = c(-1.0, 0.0, -0.3)){
   err <- function(beta)
-    max(loss(y,  beta[1] + beta[2]*exp(-beta[3]*x)))
+    mean(loss(y,  beta[1] + beta[2]*exp(-beta[3]*x)))
   beta <- optim(par = beta_init, fn = err)
   return(beta)
 }
