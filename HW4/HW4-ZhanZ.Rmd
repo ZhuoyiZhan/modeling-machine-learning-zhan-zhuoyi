@@ -3,29 +3,46 @@ title: "Homework 4"
 author: "Zhan, Zhuoyi"
 date: "`r date()`"
 output: github_document
+---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+ Question 4.4
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+ (a) On average, what fraction of the available observations will we use to make the prediction?
 
+ Becuase there is only 1 feature and it is uniformly distributed, so on average we will use 10% of the obervation
+
+
+ (b)
+
+ 1%
+
+
+ (c)
+
+0.01^100 *100 = 10^-98 %
+
+
+(d)
+
+The fraction of training data near test test observation decrease exponentially.
+
+(e)
+ l = 0.1^(1/p)
+the volumn of hypercube’ will be 10% of the total volume of space in the p-dimension cube.
+
+
+Question 4.10
+
+a)
 ```{r}
-plot(cars)
+#install.packages("ISLR")
+library(ISLR)
+summary(Weekly)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
-
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
-
-# Question 1
-
 ```{r}
-
+pairs(Weekly)
 ```
+Dimension and year may have a curved, non-linear pattern. and direction has linear pattern with other vriables.
 
-# Question 2
-```{r}
-
-```
-
+b)
