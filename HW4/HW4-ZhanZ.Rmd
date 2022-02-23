@@ -36,7 +36,12 @@ Question 4.10
 a)
 ```{r}
 #install.packages("ISLR")
+#install.packages('caret')
 library(ISLR)
+library(caret)
+library(MASS)
+library(class)
+library(e1071)
 summary(Weekly)
 ```
 
@@ -46,3 +51,113 @@ pairs(Weekly)
 Dimension and year may have a curved, non-linear pattern. and direction has linear pattern with other vriables.
 
 b)
+```{r}
+lr.fit = glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, data = Weekly, 
+    family = binomial)
+summary(lr.fit)
+```
+Lag 2 has a pr(>|z|) of 0.0296 which is statistically significant.
+
+c)
+```{r}
+glm.probs = predict(lr.fit, type = "response")
+glm.pred = rep("Down", length(glm.probs))
+glm.pred[glm.probs > 0.5] = "Up"
+table(glm.pred, Weekly$Direction)
+```
+The  Accuracy rate is (54+557)/(54+557+48+430) = 56.1%.
+The True positive rate is 557/(48+557) = 92.1% So 92.1% of time, the logistic regression predict as up is right.
+
+d)
+```{r}
+train = (Weekly$Year < 2009)
+hold = Weekly[!train, ]
+glm.fit = glm(Direction ~ Lag2, data = Weekly, family = binomial, subset = train)
+glm.probs = predict(glm.fit, hold, type = "response")
+glm.pred = rep("Down", length(glm.probs))
+glm.pred[glm.probs > 0.5] = "Up"
+Direction.hold = Weekly$Direction[!train]
+table(glm.pred, Direction.hold)
+mean(lda.pred$class == Direction.hold)
+```
+
+overall fraction of correct predictions is (56+9)/(5+56+34+9) = 62.5%
+
+e)
+```{r}
+lda.fit = lda(Direction ~ Lag2, data = Weekly, subset = train)
+lda.pred = predict(lda.fit, hold)
+table(lda.pred$class, Direction.hold)
+mean(lda.pred$class == Direction.hold)
+```
+
+overall fraction of correct predictions is 62.5%
+
+f)
+```{r}
+qda.fit = qda(Direction ~ Lag2, data = Weekly, subset = train)
+qda.class = predict(qda.fit, hold)$class
+table(qda.class, Direction.hold)
+mean(qda.class == Direction.hold)
+
+```
+overall fraction of correct predictions is 58.65%
+
+g)
+```{r}
+train.X = as.matrix(Weekly$`Lag2`[train])
+test.X = as.matrix(Weekly$`Lag2`[!train])
+train.Direction = Weekly$Direction[train]
+set.seed(1)
+knn.pred = knn(train.X, test.X, train.Direction, k = 1)
+table(knn.pred, Direction.hold)
+mean(knn.pred == Direction.hold)
+```
+overall fraction of correct predictions is 50%
+
+h)
+```{r}
+nb.fit = naiveBayes(Direction ~ Lag2, data = Weekly, subset = train)
+nb.class = predict(nb.fit, hold)
+table(nb.class, Direction.hold)
+mean(nb.class == Direction.hold)
+```
+
+i)
+```{r}
+# LOgistic regression and LDA 
+```
+
+j)
+```{r}
+# KNN k =10
+knn.pred = knn(train.X, test.X, train.Direction, k = 10)
+table(knn.pred, Direction.hold)
+mean(knn.pred == Direction.hold)
+```
+```{r}
+# KNN k =50
+knn.pred = knn(train.X, test.X, train.Direction, k = 50)
+table(knn.pred, Direction.hold)
+mean(knn.pred == Direction.hold)
+```
+
+```{r}
+#Logistic regression with sqrt(abs(Lag2))
+
+glm.fit = glm(Direction ~ Lag2 + sqrt(abs(Lag2)), data = Weekly, family = binomial, subset = train)
+glm.probs = predict(glm.fit, hold, type = "response")
+glm.pred = rep("Down", length(glm.probs))
+glm.pred[glm.probs > 0.5] = "Up"
+Direction.hold = Weekly$Direction[!train]
+table(glm.pred, Direction.hold)
+mean(glm.pred == Direction.hold)
+```
+```{r}
+# LDA with Lag2 interaction with Lag1
+lda.fit = lda(Direction ~ Lag2:Lag1, data = Weekly, subset = train)
+lda.pred = predict(lda.fit, hold)
+table(lda.pred$class, Direction.hold)
+mean(lda.pred$class == Direction.hold)
+```
+
