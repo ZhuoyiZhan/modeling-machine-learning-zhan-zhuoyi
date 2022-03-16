@@ -1,7 +1,7 @@
 HW5-ZhanZ
 ================
 Zhan, Zhuoyi
-Tue Mar 15 21:54:25 2022
+Wed Mar 16 17:22:28 2022
 
 ``` r
 library('MASS') ## for 'mcycle'
@@ -249,7 +249,7 @@ plot
 
     ## function (x, y, ...) 
     ## UseMethod("plot")
-    ## <bytecode: 0x7fd67f83f7b8>
+    ## <bytecode: 0x7fb238dc41d0>
     ## <environment: namespace:base>
 
 ``` r
@@ -266,7 +266,7 @@ ttrain=list()
 ttest = list()
 kl = list()
 ## how does k affect shape of predictor and eff. df using k-nn kernel ?
-for (k in 1:10) {
+for (k in 1:30) {
    ## make predictions using NW method at training inputs
   print(k)
    y_hat <- nadaraya_watson(y_train, x_train, x_train,
@@ -297,6 +297,26 @@ for (k in 1:10) {
     ## [1] 8
     ## [1] 9
     ## [1] 10
+    ## [1] 11
+    ## [1] 12
+    ## [1] 13
+    ## [1] 14
+    ## [1] 15
+    ## [1] 16
+    ## [1] 17
+    ## [1] 18
+    ## [1] 19
+    ## [1] 20
+    ## [1] 21
+    ## [1] 22
+    ## [1] 23
+    ## [1] 24
+    ## [1] 25
+    ## [1] 26
+    ## [1] 27
+    ## [1] 28
+    ## [1] 29
+    ## [1] 30
 
 ``` r
 plot(unlist(kl),unlist(taic),type='o',xlab="k",ylab="Error rate",col="blue")
@@ -323,6 +343,7 @@ plot(unlist(kl),unlist(ttest),type='o',col="green")
 ![](HW5-ZhanZ_files/figure-gfm/unnamed-chunk-6-4.png)<!-- -->
 
 ``` r
+set.seed(42)
 #clean.data <- mcycle[complete.cases(mcycle),]
 resample_rows <-  sample(nrow(mcycle))
 resample_dat <- mcycle[resample_rows, ]

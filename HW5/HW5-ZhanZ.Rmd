@@ -239,7 +239,7 @@ ttrain=list()
 ttest = list()
 kl = list()
 ## how does k affect shape of predictor and eff. df using k-nn kernel ?
-for (k in 1:10) {
+for (k in 1:30) {
    ## make predictions using NW method at training inputs
   print(k)
    y_hat <- nadaraya_watson(y_train, x_train, x_train,
@@ -267,6 +267,7 @@ plot(unlist(kl),unlist(ttest),type='o',col="green")
 ```
 
 ```{r}
+set.seed(42)
 #clean.data <- mcycle[complete.cases(mcycle),]
 resample_rows <-  sample(nrow(mcycle))
 resample_dat <- mcycle[resample_rows, ]
