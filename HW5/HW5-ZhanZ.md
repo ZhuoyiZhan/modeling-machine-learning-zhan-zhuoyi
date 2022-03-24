@@ -1,7 +1,7 @@
 HW5-ZhanZ
 ================
 Zhan, Zhuoyi
-Wed Mar 16 17:22:28 2022
+Thu Mar 17 14:51:56 2022
 
 ``` r
 library('MASS') ## for 'mcycle'
@@ -249,7 +249,7 @@ plot
 
     ## function (x, y, ...) 
     ## UseMethod("plot")
-    ## <bytecode: 0x7fb238dc41d0>
+    ## <bytecode: 0x7ff3fe3669b0>
     ## <environment: namespace:base>
 
 ``` r
@@ -388,6 +388,8 @@ stds <- apply(err_cv, 1, sd)
 plot(x=1:num_tuned, y = average_error, type="l", col="red", pch=20, xlab = "k", ylab = "Average CV error", main=" CV-estimated test error")
 segments(x0=1:50, y0 = average_error - stds, y1= average_error+stds, lty =2)
 points(x=1:num_tuned, y = average_error, pch=20, col="blue", cex=.5)
+
+abline(h=(average_error+stds)[which.min(average_error)],lty=2,col ="black")
 ```
 
 ![](HW5-ZhanZ_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->

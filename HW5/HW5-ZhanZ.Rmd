@@ -313,6 +313,8 @@ stds <- apply(err_cv, 1, sd)
 plot(x=1:num_tuned, y = average_error, type="l", col="red", pch=20, xlab = "k", ylab = "Average CV error", main=" CV-estimated test error")
 segments(x0=1:50, y0 = average_error - stds, y1= average_error+stds, lty =2)
 points(x=1:num_tuned, y = average_error, pch=20, col="blue", cex=.5)
+
+abline(h=(average_error+stds)[which.min(average_error)],lty=2,col ="black")
 ```
 
 ## Interpret the resulting figures and select a suitable value for the tuning parameter.
