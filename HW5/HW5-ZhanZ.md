@@ -1,7 +1,7 @@
 HW5-ZhanZ
 ================
 Zhan, Zhuoyi
-Fri Mar 25 16:50:01 2022
+Fri Mar 25 16:52:29 2022
 
 ``` r
 library('MASS') ## for 'mcycle'
