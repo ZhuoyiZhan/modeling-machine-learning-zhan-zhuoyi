@@ -1,12 +1,31 @@
 HW5-ZhanZ
 ================
 Zhan, Zhuoyi
-Thu Mar 17 14:51:56 2022
+Fri Mar 25 16:50:01 2022
 
 ``` r
 library('MASS') ## for 'mcycle'
 library('manipulate') ## for 'manipulate'
+library('ggplot2')
+library('dplyr')
+```
 
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following object is masked from 'package:MASS':
+    ## 
+    ##     select
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
 data(mcycle)
 ```
 
@@ -18,8 +37,6 @@ subsets.
 ``` r
 library(caret)
 ```
-
-    ## Loading required package: ggplot2
 
     ## Loading required package: lattice
 
@@ -133,19 +150,6 @@ loss_squared_error <- function(y, yhat)
 error <- function(y, yhat, loss=loss_squared_error)
   mean(loss(y, yhat))
 
-## AIC
-## y    - training y
-## yhat - predictions at training x
-## d    - effective degrees of freedom
-aic <- function(y, yhat, d)
-  error(y, yhat) + 2/length(y)*d
-
-## BIC
-## y    - training y
-## yhat - predictions at training x
-## d    - effective degrees of freedom
-bic <- function(y, yhat, d)
-  error(y, yhat) + log(length(y))/length(y)*d
 
 
 ## make predictions using NW method at training inputs
@@ -157,20 +161,6 @@ matrix_image(attr(y_hat, 'k'))
 ```
 
 ![](HW5-ZhanZ_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
-
-``` r
-## compute effective degrees of freedom
-edf <- effective_df(y, x, kernel_epanechnikov, lambda=5)
-aic(y, y_hat, edf)
-```
-
-    ## [1] 677.1742
-
-``` r
-bic(y, y_hat, edf)
-```
-
-    ## [1] 677.3629
 
 ``` r
 ## create a grid of inputs 
@@ -194,18 +184,11 @@ error, AIC, BIC, and validation error (using the validation data) as
 functions of the tuning parameter.
 
 ``` r
-x_train = matrix(train$times, length(train$times), 1)
-y_train = train$accel
-x_test = matrix(test$times, length(test$times), 1)
-y_test = test$accel
-y_hat <- nadaraya_watson(y_train, x_train, x_train,
-  kernel_epanechnikov, lambda=5)
-
 ## k-NN kernel function
 ## x  - n x p matrix of training inputs
 ## x0 - 1 x p input where to make prediction
 ## k  - number of nearest neighbors
-kernel_k_nearest_neighbors <- function(x, x0, k) {
+kernel_k_nearest_neighbors <- function(x, x0, k=1) {
   ## compute distance betwen each x and x0
   z <- t(t(x) - x0)
   d <- sqrt(rowSums(z*z))
@@ -218,132 +201,122 @@ kernel_k_nearest_neighbors <- function(x, x0, k) {
   
   return(w)
 }
-## loss function
-## y    - train/test y
-## yhat - predictions at train/test x
-loss_squared_error <- function(y, yhat)
-  (y - yhat)^2
-
-## test/train error
-## y    - train/test y
-## yhat - predictions at train/test x
-## loss - loss function
-error <- function(y, yhat, loss=loss_squared_error)
-  mean(loss(y, yhat))
-## AIC
-## y    - training y
-## yhat - predictions at training x
-## d    - effective degrees of freedom
-aic <- function(y, yhat, d)
-  error(y, yhat) + 2/length(y)*d
-
-## BIC
-## y    - training y
-## yhat - predictions at training x
-## d    - effective degrees of freedom
-bic <- function(y, yhat, d)
-  error(y, yhat) + log(length(y))/length(y)*d
-
-plot
 ```
-
-    ## function (x, y, ...) 
-    ## UseMethod("plot")
-    ## <bytecode: 0x7ff3fe3669b0>
-    ## <environment: namespace:base>
 
 ``` r
 x_train = matrix(train$times, length(train$times), 1)
 y_train = train$accel
 x_test = matrix(test$times, length(test$times), 1)
 y_test = test$accel
-#y_hat <- nadaraya_watson(y_train, x_train, x_train,
-#  kernel_epanechnikov, lambda=5)
+```
 
-taic=list()
-tbic=list()
-ttrain=list()
-ttest = list()
-kl = list()
-## how does k affect shape of predictor and eff. df using k-nn kernel ?
-for (k in 1:30) {
-   ## make predictions using NW method at training inputs
-  print(k)
-   y_hat <- nadaraya_watson(y_train, x_train, x_train,
-     kern=kernel_k_nearest_neighbors, k=k)
-   y_hat2 <- nadaraya_watson(y_test, x_test, x_test,
-     kern=kernel_k_nearest_neighbors, k=k)
-   edf <- effective_df(y_train, x_train, 
-     kern=kernel_k_nearest_neighbors, k=k)
-   aic_ <- aic(y_train, y_hat, edf)
-   bic_ <- bic(y_train, y_hat, edf)
-   train_err  <- error(y_train, y_hat)
-   test_err <- error(y_test, y_hat2)
-   taic<-append(taic, aic_)
-   tbic<-append(tbic,bic_)
-   ttrain<-append(ttrain, train_err)
-   ttest<-append(ttest,test_err)
-   kl<- append(kl,k)
+``` r
+set.seed(777)
+training.matrix <- matrix(0, nrow = 20, ncol = length(x_train))
+
+for (i in 1:20) {
+  training.matrix[i,] <- nadaraya_watson(y = y_train,
+                        x = x_train,
+                        x0 = x_train,
+                        kern = kernel_k_nearest_neighbors,
+                        k = i)
 }
+
+training.error <- apply(training.matrix, MARGIN = 1, FUN = error, y = y_train, loss = loss_squared_error)
+
+data.frame(k=1:20, method = "Training error",score = training.error) %>%
+  ggplot(aes(x =k, y=score))+
+  geom_line(col = " red") +
+  geom_point(col = "blue") +
+  labs(title = "Training Error") 
 ```
 
-    ## [1] 1
-    ## [1] 2
-    ## [1] 3
-    ## [1] 4
-    ## [1] 5
-    ## [1] 6
-    ## [1] 7
-    ## [1] 8
-    ## [1] 9
-    ## [1] 10
-    ## [1] 11
-    ## [1] 12
-    ## [1] 13
-    ## [1] 14
-    ## [1] 15
-    ## [1] 16
-    ## [1] 17
-    ## [1] 18
-    ## [1] 19
-    ## [1] 20
-    ## [1] 21
-    ## [1] 22
-    ## [1] 23
-    ## [1] 24
-    ## [1] 25
-    ## [1] 26
-    ## [1] 27
-    ## [1] 28
-    ## [1] 29
-    ## [1] 30
+![](HW5-ZhanZ_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
-plot(unlist(kl),unlist(taic),type='o',xlab="k",ylab="Error rate",col="blue")
+df <- rep(0, 20)
+for(i in 1:20){
+  df[i] <- effective_df(y = y_train, 
+                        x = x_train, 
+                        kern = kernel_k_nearest_neighbors, 
+                        k=i)
+}
+
+## y    - training y
+## yhat - predictions at training x
+## d    - effective degrees of freedom
+aic <- function(y, yhat, d)
+  error(y, yhat) + 2/length(y)*d
+
+
+plot_aic <- rep(0, 20)
+for( i in 1:20){
+  plot_aic[i] <- aic(y = y_train, yhat = training.matrix[i,], d = plot_aic[i])
+}
+
+data.frame(k=1:20, method = "Training error", score = plot_aic) %>%
+  ggplot(aes(x =k, y=score))+
+  geom_line(col = " red") +
+  geom_point(col = "blue") +
+  labs(title = "AIC") 
 ```
 
-![](HW5-ZhanZ_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](HW5-ZhanZ_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 ``` r
-plot(unlist(kl),unlist(tbic),type='o',col="red")
+## y    - training y
+## yhat - predictions at training x
+## d    - effective degrees of freedom
+bic <- function(y, yhat, d)
+  error(y, yhat) + log(length(y))/length(y)*d
+
+
+plot_bic <- rep(0, 20)
+for(i in 1:20){
+  plot_bic[i] <- bic(y = y_train, yhat = training.matrix[i,], d=plot_bic[i])
+}
+
+data.frame(k=1:20, method = "Training error", score = plot_bic) %>%
+  ggplot(aes(x =k, y=score))+
+  geom_line(col = " red") +
+  geom_point(col = "blue") +
+  labs(title = "BIC") 
 ```
 
-![](HW5-ZhanZ_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
+![](HW5-ZhanZ_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 ``` r
-plot(unlist(kl),unlist(ttrain),type='o',col="yellow")
+prediction.matrix <- matrix(0, nrow = 20, ncol = length(x_test))
+
+for (i in 1:20) {
+  prediction.matrix[i,] <- nadaraya_watson(y = y_test,
+                        x = x_test,
+                        x0 = x_test,
+                        kern = kernel_k_nearest_neighbors,
+                        k = i)
+}
+
+validation.error <- apply(prediction.matrix, MARGIN  = 1, FUN = error, y = y_test, loss = loss_squared_error)
+
+data.frame(k=1:20,method = "Validation error",score = validation.error) %>%
+  ggplot(aes(x =k, y=score))+
+  geom_line(col = " red") +
+  geom_point(col = "blue") +
+  labs(title = "Validation Error") 
 ```
 
-![](HW5-ZhanZ_files/figure-gfm/unnamed-chunk-6-3.png)<!-- -->
+![](HW5-ZhanZ_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+### 4,5,6
+
+### For each value of the tuning parameter, Perform 5-fold cross-validation using the combined training and validation data. This results in 5 estimates of test error per tuning parameter value.
+
+### Plot the CV-estimated test error (average of the five estimates from each fold) as a function of the tuning parameter. Add vertical line segments to the figure (using the segments function in R) that represent one “standard error” of the CV-estimated test error (standard deviation of the five estimates from each fold).
+
+### Interpret the resulting figures and select a suitable value for the tuning parameter.
 
 ``` r
-plot(unlist(kl),unlist(ttest),type='o',col="green")
-```
-
-![](HW5-ZhanZ_files/figure-gfm/unnamed-chunk-6-4.png)<!-- -->
-
-``` r
-set.seed(42)
+set.seed(777)
 #clean.data <- mcycle[complete.cases(mcycle),]
 resample_rows <-  sample(nrow(mcycle))
 resample_dat <- mcycle[resample_rows, ]
@@ -392,8 +365,8 @@ points(x=1:num_tuned, y = average_error, pch=20, col="blue", cex=.5)
 abline(h=(average_error+stds)[which.min(average_error)],lty=2,col ="black")
 ```
 
-![](HW5-ZhanZ_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](HW5-ZhanZ_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 ## Interpret the resulting figures and select a suitable value for the tuning parameter.
 
-### The test error first decrease and then increase as the tuning parameter, k (number of neighbors) increases. According to the one standard error rule, At k=8, the model has the lowest averaged test error. K =21 is the most parsimonious model whode error is no more than one standard error above the error of the best model.
+### The test error first decrease and then increase as the tuning parameter, k (number of neighbors) increases. According to the one standard error rule, At k=11, the model has the lowest averaged test error. K =2 is the most parsimonious model whode error is no more than one standard error above the error of the best model.
