@@ -1,7 +1,7 @@
 HW5-ZhanZ
 ================
 Zhan, Zhuoyi
-Fri Mar 25 16:52:29 2022
+Sat Mar 26 15:18:45 2022
 
 ``` r
 library('MASS') ## for 'mcycle'
@@ -369,4 +369,4 @@ abline(h=(average_error+stds)[which.min(average_error)],lty=2,col ="black")
 
 ## Interpret the resulting figures and select a suitable value for the tuning parameter.
 
-### The test error first decrease and then increase as the tuning parameter, k (number of neighbors) increases. According to the one standard error rule, At k=11, the model has the lowest averaged test error. K =2 is the most parsimonious model whode error is no more than one standard error above the error of the best model.
+### The test error first decrease and then increase as the tuning parameter, k (number of neighbors) increases. According to the one standard error rule, At k=11, the model has the lowest averaged test error, 669. K =29 is the most parsimonious model whode error is no more than one standard error above the error of the best model, 993 &lt; 669+325=994. A larger k is a simpler model because it leads to smoother desicion boundary.
