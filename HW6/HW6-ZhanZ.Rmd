@@ -1,0 +1,97 @@
+---
+title: "HW6-ZhanZ"
+author: "Zhan, Zhuoyi"
+date: "`r date()`"
+output: github_document
+---
+
+```{r}
+vowel <- read.csv("https://hastie.su.domains/ElemStatLearn/datasets/vowel.train")
+head(vowel)
+```
+
+```{r}
+library(dplyr)
+library(caret)
+vowels = select(vowel, -1)
+```
+
+
+### Convert the response variable in the “vowel.train” data frame to a factor variable prior to training, so that “randomForest” does classification rather than regression.
+
+```{r}
+#install.packages("randomForest")
+#install.packages("gpairs")
+library('randomForest')
+library('magrittr') ## for '%<>%' operator
+library('gpairs')   ## pairs plot
+library('viridis')
+```
+
+```{r}
+vowels$y <- as.factor(vowels$y)
+```
+
+
+### Fit the random forest model to the vowel data using all of the 11 features using the default values of the tuning parameters.
+
+```{r}
+set.seed(42)
+rf = randomForest(as.factor(y) ~ ., data=vowels)
+```
+
+
+### Use 5-fold CV and tune the model by performing a grid search for the following tuning parameters: 1) the number of variables randomly sampled as candidates at each split; consider values 3, 4, and 5, and 2) the minimum size of terminal nodes; consider a sequence (1, 5, 10, 20, 40, and 80).
+
+
+```{r}
+#x <- vowels[, 2:11]
+#y <- vowels[, 1]
+# Create model with default paramters
+control <- trainControl(method="cv", number=5, search ="grid")
+metric <- "Accuracy"
+mtrys <- c(3,4,5)
+#nodesizes <- c(1, 5, 10, 20, 40,80)
+#tunegrid <- expand.grid(.mtry = mtrys,
+#                        .splitrule = "variance",
+#                       .min.node.size = c(1, 5, 10, 20, 40, 80))
+tunegrid <- expand.grid(mtry=(3:5))
+rf_gs <- train(y~., data=vowels, method="rf", metric=metric,  trControl=control,tuneGrid = tunegrid)
+print(rf_gs)
+
+
+tunegrid1 <- expand.grid(mtry=3)
+modellist <- list()
+for (nodesize in c(1, 5, 10, 20, 40, 80)){
+  rf_default <- train(y~., data=vowels, method="rf", metric=metric,  trControl=control,tuneGrid = tunegrid1, nodesize=nodesize)#
+  key <- toString(nodesize)
+  modellist[[key]] <- rf_default
+}
+
+#Compare results
+results <- resamples(modellist)
+summary(results)
+#print(rf_default)
+#$results 
+#finalModel
+
+```
+we get optimal mtry value as 3 and optimal nodesize is 1.
+
+
+
+### With the tuned model, make predictions using the majority vote method, and compute the misclassification rate using the ‘vowel.test’ data.
+
+```{r}
+vowel.test <- read.csv("https://hastie.su.domains/ElemStatLearn/datasets/vowel.test")
+vowel.test$y <- as.factor(vowel.test$y)
+vowels.test = select(vowel.test, -1)
+rf_gs1 <- train(y~., data=vowels, method="rf",  trControl=control,tuneGrid = tunegrid1,imortance = TRUE,nodesize=1)
+```
+
+```{r}
+prediction <- predict(rf_gs1, vowel.test)
+print(mean(prediction != vowel.test$y))
+```
+
+The miscalssification rate is 0.41. 
