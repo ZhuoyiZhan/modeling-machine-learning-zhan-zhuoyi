@@ -1,7 +1,7 @@
 HW6-ZhanZ
 ================
 Zhan, Zhuoyi
-Tue Mar 29 14:51:49 2022
+Tue Apr 12 16:11:07 2022
 
 ``` r
 vowel <- read.csv("https://hastie.su.domains/ElemStatLearn/datasets/vowel.train")
@@ -102,13 +102,11 @@ rf = randomForest(as.factor(y) ~ ., data=vowels)
 # Create model with default paramters
 control <- trainControl(method="cv", number=5, search ="grid")
 metric <- "Accuracy"
-mtrys <- c(3,4,5)
-#nodesizes <- c(1, 5, 10, 20, 40,80)
-#tunegrid <- expand.grid(.mtry = mtrys,
-#                        .splitrule = "variance",
-#                       .min.node.size = c(1, 5, 10, 20, 40, 80))
-tunegrid <- expand.grid(mtry=(3:5))
-rf_gs <- train(y~., data=vowels, method="rf", metric=metric,  trControl=control,tuneGrid = tunegrid)
+
+tunegrid <- expand.grid(mtry = c(3,4,5),
+                        splitrule = "gini",
+                       min.node.size = c(1, 5, 10, 20, 40, 80))
+rf_gs <- train(y~., data=vowels, method="ranger", metric=metric,  trControl=control,tuneGrid = tunegrid, classification=TRUE)
 print(rf_gs)
 ```
 
@@ -123,54 +121,43 @@ print(rf_gs)
     ## Summary of sample sizes: 425, 422, 425, 419, 421 
     ## Resampling results across tuning parameters:
     ## 
-    ##   mtry  Accuracy   Kappa    
-    ##   3     0.9469268  0.9416118
-    ##   4     0.9450233  0.9395133
-    ##   5     0.9432091  0.9375192
+    ##   mtry  min.node.size  Accuracy   Kappa    
+    ##   3      1             0.9507034  0.9457640
+    ##   3      5             0.9432051  0.9375173
+    ##   3     10             0.9355657  0.9291107
+    ##   3     20             0.9107429  0.9018004
+    ##   3     40             0.7615862  0.7377157
+    ##   3     80             0.6421898  0.6064614
+    ##   4      1             0.9449850  0.9394742
+    ##   4      5             0.9393049  0.9332253
+    ##   4     10             0.9297954  0.9227663
+    ##   4     20             0.8998239  0.8897943
+    ##   4     40             0.7501474  0.7251406
+    ##   4     80             0.6271423  0.5899659
+    ##   5      1             0.9450752  0.9395721
+    ##   5      5             0.9393775  0.9333032
+    ##   5     10             0.9146960  0.9061486
+    ##   5     20             0.8770064  0.8646903
+    ##   5     40             0.7386411  0.7124786
+    ##   5     80             0.6134215  0.5748741
     ## 
+    ## Tuning parameter 'splitrule' was held constant at a value of gini
     ## Accuracy was used to select the optimal model using the largest value.
-    ## The final value used for the model was mtry = 3.
+    ## The final values used for the model were mtry = 3, splitrule = gini
+    ##  and min.node.size = 1.
 
 ``` r
-tunegrid1 <- expand.grid(mtry=3)
-modellist <- list()
-for (nodesize in c(1, 5, 10, 20, 40, 80)){
-  rf_default <- train(y~., data=vowels, method="rf", metric=metric,  trControl=control,tuneGrid = tunegrid1, nodesize=nodesize)#
-  key <- toString(nodesize)
-  modellist[[key]] <- rf_default
-}
+#tunegrid1 <- expand.grid(.mtry=c(3,4,5),splitrule = "entropy",
+#                       .min.node.size = c(1, 5, 10, 20, 40, 80))
+#modellist <- list()
+#for (nodesize in c(1, 5, 10, 20, 40, 80)){
+#  rf_default <- train(y~., data=vowels, method="rf", metric=metric,  #trControl=control,tuneGrid = tunegrid1, nodesize=nodesize)#
+#  key <- toString(nodesize)
+#  modellist[[key]] <- rf_default
+#}
 
 #Compare results
-results <- resamples(modellist)
-summary(results)
-```
-
-    ## 
-    ## Call:
-    ## summary.resamples(object = results)
-    ## 
-    ## Models: 1, 5, 10, 20, 40, 80 
-    ## Number of resamples: 5 
-    ## 
-    ## Accuracy 
-    ##         Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA's
-    ## 1  0.9423077 0.9619048 0.9622642 0.9620784 0.9629630 0.9809524    0
-    ## 5  0.9230769 0.9266055 0.9439252 0.9433725 0.9523810 0.9708738    0
-    ## 10 0.8715596 0.9056604 0.9142857 0.9133173 0.9333333 0.9417476    0
-    ## 20 0.7450980 0.7870370 0.8130841 0.8103451 0.8411215 0.8653846    0
-    ## 40 0.5514019 0.6666667 0.6981132 0.6689092 0.7087379 0.7196262    0
-    ## 80 0.4245283 0.4761905 0.5333333 0.5093888 0.5480769 0.5648148    0
-    ## 
-    ## Kappa 
-    ##         Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA's
-    ## 1  0.9365338 0.9580922 0.9584680 0.9582778 0.9592530 0.9790419    0
-    ## 5  0.9153611 0.9192593 0.9383048 0.9377007 0.9476257 0.9679527    0
-    ## 10 0.8586906 0.8961802 0.9056980 0.9046217 0.9266540 0.9358855    0
-    ## 20 0.7194541 0.7657267 0.7943889 0.7913545 0.8252306 0.8519723    0
-    ## 40 0.5071017 0.6329771 0.6680368 0.6358827 0.6798923 0.6914055    0
-    ## 80 0.3670713 0.4242847 0.4866806 0.4606222 0.5038067 0.5212676    0
-
-``` r
+#results <- resamples(modellist)
 #print(rf_default)
 #$results 
 #finalModel
@@ -184,7 +171,7 @@ we get optimal mtry value as 3 and optimal nodesize is 1.
 vowel.test <- read.csv("https://hastie.su.domains/ElemStatLearn/datasets/vowel.test")
 vowel.test$y <- as.factor(vowel.test$y)
 vowels.test = select(vowel.test, -1)
-rf_gs1 <- train(y~., data=vowels, method="rf",  trControl=control,tuneGrid = tunegrid1,imortance = TRUE,nodesize=1)
+rf_gs1 <- randomForest(as.factor(y) ~ ., data=vowels, nodesize=1, mtry=3)
 ```
 
 ``` r
@@ -192,4 +179,6 @@ prediction <- predict(rf_gs1, vowel.test)
 print(mean(prediction != vowel.test$y))
 ```
 
-    ## [1] 0.4155844
+    ## [1] 0.4112554
+
+The miscalssification rate is 0.41.

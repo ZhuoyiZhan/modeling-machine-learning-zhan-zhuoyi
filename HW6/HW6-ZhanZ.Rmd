@@ -50,27 +50,25 @@ rf = randomForest(as.factor(y) ~ ., data=vowels)
 # Create model with default paramters
 control <- trainControl(method="cv", number=5, search ="grid")
 metric <- "Accuracy"
-mtrys <- c(3,4,5)
-#nodesizes <- c(1, 5, 10, 20, 40,80)
-#tunegrid <- expand.grid(.mtry = mtrys,
-#                        .splitrule = "variance",
-#                       .min.node.size = c(1, 5, 10, 20, 40, 80))
-tunegrid <- expand.grid(mtry=(3:5))
-rf_gs <- train(y~., data=vowels, method="rf", metric=metric,  trControl=control,tuneGrid = tunegrid)
+
+tunegrid <- expand.grid(mtry = c(3,4,5),
+                        splitrule = "gini",
+                       min.node.size = c(1, 5, 10, 20, 40, 80))
+rf_gs <- train(y~., data=vowels, method="ranger", metric=metric,  trControl=control,tuneGrid = tunegrid, classification=TRUE)
 print(rf_gs)
 
 
-tunegrid1 <- expand.grid(mtry=3)
-modellist <- list()
-for (nodesize in c(1, 5, 10, 20, 40, 80)){
-  rf_default <- train(y~., data=vowels, method="rf", metric=metric,  trControl=control,tuneGrid = tunegrid1, nodesize=nodesize)#
-  key <- toString(nodesize)
-  modellist[[key]] <- rf_default
-}
+#tunegrid1 <- expand.grid(.mtry=c(3,4,5),splitrule = "entropy",
+#                       .min.node.size = c(1, 5, 10, 20, 40, 80))
+#modellist <- list()
+#for (nodesize in c(1, 5, 10, 20, 40, 80)){
+#  rf_default <- train(y~., data=vowels, method="rf", metric=metric,  #trControl=control,tuneGrid = tunegrid1, nodesize=nodesize)#
+#  key <- toString(nodesize)
+#  modellist[[key]] <- rf_default
+#}
 
 #Compare results
-results <- resamples(modellist)
-summary(results)
+#results <- resamples(modellist)
 #print(rf_default)
 #$results 
 #finalModel
@@ -86,7 +84,7 @@ we get optimal mtry value as 3 and optimal nodesize is 1.
 vowel.test <- read.csv("https://hastie.su.domains/ElemStatLearn/datasets/vowel.test")
 vowel.test$y <- as.factor(vowel.test$y)
 vowels.test = select(vowel.test, -1)
-rf_gs1 <- train(y~., data=vowels, method="rf",  trControl=control,tuneGrid = tunegrid1,imortance = TRUE,nodesize=1)
+rf_gs1 <- randomForest(as.factor(y) ~ ., data=vowels, nodesize=1, mtry=3)
 ```
 
 ```{r}
