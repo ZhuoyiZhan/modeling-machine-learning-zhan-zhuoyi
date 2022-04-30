@@ -5,12 +5,142 @@ date: "`r date()`"
 output: github_document
 ---
 
-Use the Keras library to re-implement the simple neural network discussed during lecture for the mixture data (see nnet.R). Use a single 10-node hidden layer; fully connected.
+```{r}
+library(keras)
+fashion_mnist <- dataset_fashion_mnist()
+
+c(train_images, train_labels) %<-% fashion_mnist$train
+c(test_images, test_labels) %<-% fashion_mnist$test
+```
 
 ```{r}
-#install.packages("keras")
-library(keras)
+library(tidyr)
+library(ggplot2)
+
+image_1 <- as.data.frame(train_images[1, , ])
+colnames(image_1) <- seq_len(ncol(image_1))
+image_1$y <- seq_len(nrow(image_1))
+image_1 <- gather(image_1, "x", "value", -y)
+image_1$x <- as.integer(image_1$x)
+
+ggplot(image_1, aes(x = x, y = y, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "black", na.value = NA) +
+  scale_y_reverse() +
+  theme_minimal() +
+  theme(panel.grid = element_blank())   +
+  theme(aspect.ratio = 1) +
+  xlab("") +
+  ylab("")
 ```
+
+```{r}
+class_names = c('T-shirt/top',
+                'Trouser',
+                'Pullover',
+                'Dress',
+                'Coat', 
+                'Sandal',
+                'Shirt',
+                'Sneaker',
+                'Bag',
+                'Ankle boot')
+```
+
+
+```{r}
+train_images <- train_images / 255
+test_images <- test_images / 255
+par(mfcol=c(5,5))
+par(mar=c(0, 0, 1.5, 0), xaxs='i', yaxs='i')
+for (i in 1:25) { 
+  img <- train_images[i, , ]
+  img <- t(apply(img, 2, rev)) 
+  image(1:28, 1:28, img, col = gray((0:255)/255), xaxt = 'n', yaxt = 'n',
+        main = paste(class_names[train_labels[i] + 1]))
+}
+```
+
+```{r}
+model <- keras_model_sequential()
+model %>%
+  layer_flatten(input_shape = c(28, 28)) %>%
+  layer_dense(units = 128, activation = 'relu') %>%
+  layer_dense(units = 10, activation = 'softmax')
+```
+
+```{r}
+model %>% compile(
+  optimizer = 'adam', 
+  loss = 'sparse_categorical_crossentropy',
+  metrics = c('accuracy')
+)
+```
+
+```{r}
+model %>% fit(train_images, train_labels, epochs = 5, verbose = 2)
+score <- model %>% evaluate(test_images, test_labels, verbose = 0)
+
+cat('Test loss:', score['loss'], "\n")
+cat('Test accuracy:', score['accuracy'], "\n")
+```
+
+```{r}
+predictions <- model %>% predict(test_images)
+
+# check
+predictions[1, ]
+
+which.max(predictions[1, ])
+
+class_pred <- model %>% predict(test_images) %>% k_argmax()
+class_pred[1:20]
+
+test_labels[1]
+
+# see some prediction. correct: green, wrong: red
+par(mfcol=c(5,5))
+par(mar=c(0, 0, 1.5, 0), xaxs='i', yaxs='i')
+for (i in 1:25) { 
+  img <- test_images[i, , ]
+  img <- t(apply(img, 2, rev)) 
+  # subtract 1 as labels go from 0 to 9
+  predicted_label <- which.max(predictions[i, ]) - 1
+  true_label <- test_labels[i]
+  if (predicted_label == true_label) {
+    color <- '#008800' 
+  } else {
+    color <- '#bb0000'
+  }
+  image(1:28, 1:28, img, col = gray((0:255)/255), xaxt = 'n', yaxt = 'n',
+        main = paste0(class_names[predicted_label + 1], " (",
+                      class_names[true_label + 1], ")"),
+        col.main = color)
+}
+
+## predict single image
+# Grab an image from the test dataset
+# take care to keep the batch dimension, as this is expected by the model
+img <- test_images[1, , , drop = FALSE]
+dim(img)
+
+predictions <- model %>% predict(img)
+predictions
+
+# subtract 1 as labels are 0-based
+prediction <- predictions[1, ] - 1
+which.max(prediction)
+
+class_pred <- model %>% predict(img) %>% k_argmax()
+class_pred
+```
+
+
+
+
+Use the Keras library to re-implement the simple neural network discussed during lecture for the mixture data (see nnet.R). Use a single 10-node hidden layer; fully connected.
+
+
 
 ```{r}
 #install.packages('rgl')
@@ -19,11 +149,6 @@ library('nnet')
 library('dplyr')
 ```
 
-```{r}
-
-library(devtools)
-install_url("https://cran.r-project.org/src/contrib/Archive/ElemStatLearn/ElemStatLearn_2015.6.26.tar.gz")
-```
 
 ```{r}
 library('ElemStatLearn')
@@ -34,36 +159,14 @@ data(mixture.example)
 dat <- mixture.example
 ```
 
-```{r}
-fit <- nnet(x=dat$x, y=dat$y, size=10,entropy=TRUE, decay=0)
 
-```
-
-```{r}
-dim(dat$x)
-head(dat$x)
-n <- dat$x
-```
-
-
-
-```{r}
-range01 <- function(x){(x-min(x))/(max(x)-min(x))}
-xtrain <- range01(dat$x)
-xtest <- range01(dat$px1)
-```
-
-```{r}
-xtrain
-```
 
 
 ```{r}
 model <- keras_model_sequential()
 model %>%
-  layer_flatten(input_shape = 2) %>%
   layer_dense(units = 10, activation = 'relu') %>%
-  layer_dense(units = 10, activation = 'softmax')
+  layer_dense(units = 2, activation = 'softmax')
 ```
 
 
@@ -77,12 +180,71 @@ model %>% compile(
 
 
 ```{r}
-model %>% fit(xtrain, dat$y, epochs = 5, verbose = 2)
+model %>% fit(x=dat$x, y=dat$y, epochs = 5, verbose = 2)
+```
+
+## 3.
+
+
+```{r}
+plot_mixture_data <- expression({
+  plot(dat$xnew[,1], dat$xnew[,2], type="n",xlab="x1", ylab="x2")
+  ## plot points and bounding box
+  x1r <- range(dat$px1)
+  x2r <- range(dat$px2)
+  pts <- plot(dat$x[,1], dat$x[,2],
+                type="p",col=ifelse(dat$y, "orange", "blue"))
+  lns <- lines(x1r[c(1,2,2,1,1)], x2r[c(1,1,2,2,1)])
+
+  prob <- matrix(dat$prob, length(dat$px1), length(dat$px2))
+  cls <- contourLines(dat$px1, dat$px2,prob, levels=0.5)
+  pls <- lapply(cls, function(p) 
+    lines(p$x, p$y, col='purple', lwd=3))
+})
 ```
 
 
 
+```{r}
+plot_keras_predictions <- function(fit, dat=mixture.example) {
+  
+  ## create figure
+  eval(plot_mixture_data)
+  
+  ## compute predictions from nnet
+  preds <- predict(fit, dat$xnew, type="class")
+  probs <- predict(fit, dat$xnew, type="raw")[,1]
+  probm <- matrix(probs, length(dat$px1), length(dat$px2))
+  cls <- contourLines(dat$px1, dat$px2, probm, levels=0.5)
+  
+  ## plot classification boundary
+  pls <- lapply(cls, function(p) 
+    lines(p$x, p$y,col='red', lwd=2))
+}
 
+plot_keras_predictions(model)
+```
+
+```{r}
+plot_nnet_predictions <- function(fit, dat=mixture.example) {
+  
+  ## create figure
+  eval(plot_mixture_data)
+  
+  ## compute predictions from nnet
+  preds <- predict(fit, dat$xnew, type="class")
+  probs <- predict(fit, dat$xnew, type="raw")[,1]
+  probm <- matrix(probs, length(dat$px1), length(dat$px2))
+  cls <- contourLines(dat$px1, dat$px2, probm, levels=0.5)
+  
+  ## plot classification boundary
+  pls <- lapply(cls, function(p) 
+    lines(p$x, p$y, z=1, col='green', lwd=2))
+}
+
+nnet_fit <- nnet(x=dat$x, y=dat$y, size=10, entropy=TRUE, decay=0) 
+plot_nnet_predictions(nnet_fit)
+```
 
 
 
